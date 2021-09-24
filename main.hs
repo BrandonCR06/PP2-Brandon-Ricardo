@@ -93,7 +93,7 @@ asignarHabitacionexTipo (hab,cantxTipo,tarifas ,reser, fact, i, respuesta )= do
     let g = "Ingrese la cantidad para el tipo "  ++ tipo
     print g        
     cant <- getLine    
-    if i == largo (hab) then 
+    if i == largo (hab) - 1 then 
         admin hab cantxTipo tarifas  reser fact
     else asignarHabitacionexTipo (hab,cantxTipo,tarifas,reser ,fact ,i+1, respuesta ++ [[tipo]++ [cant]])
 
@@ -105,12 +105,45 @@ cargaTarifas hab cantxTipo  reser fact = do
     let contenido2 =  functionToList (separarPorComas,contenido)
     admin hab cantxTipo contenido2 reser fact    
 
+
+-- Verifica si un elemento de la lista existe en el la lista indicada
+-- Entradas: Lista y un elemento
+-- Salida: Boolean
+elemento (x:xs) a = if a == x then True else elemento xs a
+elemento [] a = False
+
+-- Validar si una habitacion existe
+-- Entradas: Arreglo de habitaciones, Nombre de la habitación y Indice = 0
+-- Salida: Boleean
+
+validarHabitacionExiste (habArreglo, tipoHabitacion,i) = do
+  if elemento(enesimo(enesimo(habArreglo,i),0)) tipoHabitacion then True
+  else
+    if i == largo(habArreglo) then False
+    else
+      validarHabitacionExiste (habArreglo, tipoHabitacion, i+1)
+
+
+-- Validar si una cantidad es valida para determinado tipo de habitacion
+-- Entradas: Arreglo de habitaciones, Nombre de la habitación, Cantidad a preguntar y Indice = 0
+-- Salida: Boleean
+validarCantidadTipoHabitacion (habArreglo, tipoHabitacion, cantidad, i) = do
+  if cantidad <= enesimo(enesimo(habArreglo,i),2) && elemento(enesimo(enesimo(habArreglo,i),0)) tipoHabitacion then True
+  else
+    if i == largo(habArreglo) then False
+      else
+        validarCantidadTipoHabitacion (habArreglo, tipoHabitacion, cantidad, i+1)
+
+
+
+
+
 imprime l = do 
         print ""
         return l 
 
 -- main        
-menuTotal = 
+main = 
     menu [] [] [] [] [] 
 
 
