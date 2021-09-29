@@ -1,5 +1,7 @@
 import Data.List 
 import System.IO 
+import Data.Time.Calendar.OrdinalDate
+import Data.Time
 
 -- Contar las comas de un string
 
@@ -103,6 +105,7 @@ cargaTarifas hab cantxTipo  reser fact = do
     content <- readFile ruta
     let contenido = separarPorSaltodeLine (content,"")
     let contenido2 =  functionToList (separarPorComas,contenido)
+    print contenido2
     admin hab cantxTipo contenido2 reser fact    
 
 
@@ -135,6 +138,65 @@ validarCantidadTipoHabitacion (habArreglo, tipoHabitacion, cantidad, i) = do
         validarCantidadTipoHabitacion (habArreglo, tipoHabitacion, cantidad, i+1)
 
 
+calcularMonto (tarifaArreglo, tipoPersona, anno, mes, dia, cantidadPersonas, monto) = do
+  let f = mondayStartWeek(fromGregorian anno mes dia)
+  let fecha = snd f
+  if tipoPersona == "Adulto" && (mes >= 4) && (mes <= 10) then do                 --TEMPORADA BAJA
+      if (fecha == 5) || (fecha == 6) then do --Si es viernes o sabado
+      let tarifa = read (enesimo(enesimo(tarifaArreglo,3-1),1)) :: Int
+      let monto = tarifa * cantidadPersonas                                     -- 3: Verde fin de semana adulto: de viernes a sábado, de abril a octubre
+      monto
+      else do
+        let tarifa = read(enesimo(enesimo(tarifaArreglo,1-1),1)) :: Int 
+        let monto = tarifa * cantidadPersonas                                   -- 1: Verde entre semana adulto: de domingo a jueves, de abril a octubre
+        monto
+  else 
+    if tipoPersona == "Adulto" && (mes >= 11) && (mes <= 3) then do                   --TEMPORADA ALTA
+      if (fecha == 5) || (fecha == 6) then do  --Si es viernes o sabado
+        let tarifa = read(enesimo(enesimo(tarifaArreglo,7-1),1)) :: Int 
+        let monto = tarifa * cantidadPersonas                                   -- 7: Alta fin de semana adulto: de viernes a sábado, de noviembre a marzo
+        monto
+      else do
+        let tarifa = read(enesimo(enesimo(tarifaArreglo,5-1),1)) :: Int 
+        let monto = tarifa * cantidadPersonas                                   -- 5: Alta entre semana adulto: domingo a jueves, de noviembre a marzo
+        monto
+    else
+      if tipoPersona == "Nino" && (mes >= 4) && (mes <= 10) then do                   --TEMPORADA BAJA
+        if (fecha == 5) || (fecha == 6) then do --Si es viernes o sabado
+           let tarifa = read(enesimo(enesimo(tarifaArreglo,4-1),1)) :: Int  
+           let monto = tarifa * cantidadPersonas                                 -- 4: Verde fin de semana niño: de viernes a sábado, de abril a octubre
+           monto
+        else do
+          let tarifa = read(enesimo(enesimo(tarifaArreglo,2-1),1)) 
+          let monto = tarifa * cantidadPersonas                                  -- 2: Verde entre semana niño: de domingo a jueves, de abril a octubre
+          monto
+      else do                                                                   --TEMPORADA ALTA
+        if (fecha == 5) || (fecha == 6) then do --Si es viernes o sabado
+          let tarifa = read(enesimo(enesimo(tarifaArreglo,8-1),1)) :: Int  
+          let monto = tarifa * cantidadPersonas                                 -- 8: Alta fin de semana niño: de viernes a sábado, de noviembre a marzo
+          monto
+        else do
+          let tarifa = read(enesimo(enesimo(tarifaArreglo,6-1),1)) :: Int 
+          let monto = tarifa * cantidadPersonas                                 -- 6: Alta entre semana niño: domingo a jueves, de noviembre a marzo
+          monto
+
+calcularTarifaDias
+  (tarifaArreglo, monto,
+   tipoPersona, anno, cant, diaInicial, diaFinal, mesInicial, mesFinal)
+  | (diaInicial == diaFinal) && (mesInicial == mesFinal) = monto
+  | diaInicial == 31
+  = calcularTarifaDias
+      (tarifaArreglo, monto +
+       calcularMonto
+         (tarifaArreglo, tipoPersona, anno, mesInicial, diaInicial, cant, 
+          0), 
+       tipoPersona, anno, cant, 1, diaFinal, mesInicial + 1, mesFinal)
+  | otherwise
+  = calcularTarifaDias
+      (tarifaArreglo,monto + 
+       calcularMonto
+         (tarifaArreglo, tipoPersona, anno, mesInicial, diaInicial, cant, 
+          0), tipoPersona, anno, cant, diaInicial + 1, diaFinal, mesInicial, mesFinal ) 
 
 
 
