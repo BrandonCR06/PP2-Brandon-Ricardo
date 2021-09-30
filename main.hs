@@ -2,7 +2,6 @@ import Data.List
 import System.IO 
 import Data.Time.Calendar.OrdinalDate
 import Data.Time
-
 -- Contar las comas de un string
 
 --import System.IO
@@ -20,6 +19,34 @@ parseFile fp = do
   let (s : ss) = lines contents
   return (s : ss)
 
+
+
+-- Verifica si un elemento de la lista existe en el la lista indicada
+-- Entradas: Lista y un elemento
+-- Salida: Boolean
+elemento (x:xs) a = if a == x then True else elemento xs a
+elemento [] a = False
+
+-- Validar si una habitacion existe
+-- Entradas: Arreglo de habitaciones, Nombre de la habitación y Indice = 0
+-- Salida: Boleean
+
+validarHabitacionExiste (habArreglo, tipoHabitacion,i) = do
+    if i == largo(habArreglo) then False
+    else if enesimo(enesimo(habArreglo,i),0)== tipoHabitacion then True  
+    else
+      validarHabitacionExiste (habArreglo, tipoHabitacion, i+1)
+
+
+-- Validar si una cantidad es valida para determinado tipo de habitacion
+-- Entradas: Arreglo de habitaciones, Nombre de la habitación, Cantidad a preguntar y Indice = 0
+-- Salida: Boleean
+validarCantidadTipoHabitacion (habArreglo, tipoHabitacion, cantidad, i) = do
+  if cantidad <= enesimo(enesimo(habArreglo,i),2) && elemento(enesimo(enesimo(habArreglo,i),0)) tipoHabitacion then True
+  else
+    if i == largo(habArreglo) then False
+      else
+        validarCantidadTipoHabitacion (habArreglo, tipoHabitacion, cantidad, i+1)
 
 
 largo :: [a] -> Int
@@ -79,63 +106,224 @@ guardarInfoHotel = do
     print "Datos Ingresados con exito"
 
 
-cargarTipoHabitaciones cantxTipo tarifas reserv fact = do
+cargarTipoHabitaciones cantxTipo tarifas reserv fact habitaciones = do
     print "Ingrese la ruta del archivo de habitaciones"
     ruta <- getLine
     content <- readFile ruta
     let contenido = separarPorSaltodeLine (content,"")
     let contenido2 =  functionToList (separarPorComas,contenido)
     print "Tipo de habitaciones cargado correctamente"
-    admin contenido2 cantxTipo tarifas reserv fact
+    print contenido2
+    admin contenido2 cantxTipo tarifas reserv fact habitaciones
 
-
-
-asignarHabitacionexTipo (hab,cantxTipo,tarifas ,reser, fact, i, respuesta )= do 
+generarNHabitaciones( cant, idf, hab, tipo,i) = 
+    if i== cant then hab 
+    else do 
+        let  ki = show idf 
+        generarNHabitaciones (cant, idf+1, (hab++[[ki]++[tipo]++["noReservada"]]), tipo,i+1)        
+-- [["Estandar","des","4"],["Suite","des","4"]]
+asignarHabitacionexTipo (hab,cantxTipo,tarifas ,reser, fact, i, respuesta, habitaciones )= do     
     let tipo = enesimo(enesimo(hab,i),0)
     let g = "Ingrese la cantidad para el tipo "  ++ tipo
     print g        
     cant <- getLine    
-    if i == largo (hab) - 1 then 
-        admin hab cantxTipo tarifas  reser fact
-    else asignarHabitacionexTipo (hab,cantxTipo,tarifas,reser ,fact ,i+1, respuesta ++ [[tipo]++ [cant]])
+    let cant1 = read cant :: Int
+    let olId = largo habitaciones
+    let habi = generarNHabitaciones (cant1, olId, [], tipo,0)    
+    if i == largo (hab) -1 then do         
+        let c = habitaciones++habi
+        print c
+        admin hab respuesta tarifas reser fact c
+    else asignarHabitacionexTipo (hab,cantxTipo,tarifas,reser ,fact ,i+1, respuesta ++ [[tipo]++ [cant]],habitaciones++habi)
 
-cargaTarifas hab cantxTipo  reser fact = do 
+cargaTarifas hab cantxTipo  reser fact habitaciones = do 
     print "Ingrese la ruta del archivo de tarifas"
     ruta <- getLine
     content <- readFile ruta
     let contenido = separarPorSaltodeLine (content,"")
     let contenido2 =  functionToList (separarPorComas,contenido)
-    print contenido2
-    admin hab cantxTipo contenido2 reser fact    
+    admin hab cantxTipo contenido2 reser fact habitaciones
 
 
--- Verifica si un elemento de la lista existe en el la lista indicada
--- Entradas: Lista y un elemento
--- Salida: Boolean
-elemento (x:xs) a = if a == x then True else elemento xs a
-elemento [] a = False
+cargarTarifas hab cantxTipo  reser fact = do 
+    print "Ingrese la ruta del archivo de tarifas"
+    ruta <- getLine
+    content <- readFile ruta
+    let contenido = separarPorSaltodeLine (content,"")
+    let contenido2 =  functionToList (separarPorComas,contenido)
+    return contenido2
 
--- Validar si una habitacion existe
--- Entradas: Arreglo de habitaciones, Nombre de la habitación y Indice = 0
--- Salida: Boleean
+imprime l = do 
+        print ""
+        return l 
 
-validarHabitacionExiste (habArreglo, tipoHabitacion,i) = do
-  if elemento(enesimo(enesimo(habArreglo,i),0)) tipoHabitacion then True
-  else
-    if i == largo(habArreglo) then False
+-- main        
+menuTotal = 
+    menu [] [] [] [] [] [] 
+
+
+menu tipoHabitaciones cantidadXtipo tarifas reservaciones facturas habitaciones = do 
+    putStr "Ingrese una opcion \n"
+    putStr "1.Opciones Administrativas \n"
+    putStr "2.Opciones generales \n"
+    putStr "3.Salir \n"
+    first <- getLine
+    if first== [head "1"] then                             
+        admin tipoHabitaciones cantidadXtipo tarifas reservaciones facturas habitaciones
+    else if  first== [head "2"] then                             
+        generales( tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones)
+    else if  first== [head "3"] then   
+        print ""
+    else menu tipoHabitaciones cantidadXtipo tarifas reservaciones facturas habitaciones 
+
+generales (tipoHabitaciones ,cantidadXtipo ,tarifas ,reservaciones ,facturas,habitaciones )= do 
+    putStr "Ingrese una opcion \n"
+    putStr "1.Reservacion \n"
+    putStr "2.Factura \n"
+    putStr "3.Volver \n"
+    first <- getLine
+    print reservaciones
+    if first== [head "1"] then                             
+        reservar (tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones, [],0,0,0)
+    else if first== [head "3"] then                             
+        menu tipoHabitaciones cantidadXtipo tarifas reservaciones facturas habitaciones
+
     else
-      validarHabitacionExiste (habArreglo, tipoHabitacion, i+1)
+        generales (tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones)    
 
 
--- Validar si una cantidad es valida para determinado tipo de habitacion
--- Entradas: Arreglo de habitaciones, Nombre de la habitación, Cantidad a preguntar y Indice = 0
--- Salida: Boleean
-validarCantidadTipoHabitacion (habArreglo, tipoHabitacion, cantidad, i) = do
-  if cantidad <= enesimo(enesimo(habArreglo,i),2) && elemento(enesimo(enesimo(habArreglo,i),0)) tipoHabitacion then True
-  else
-    if i == largo(habArreglo) then False
-      else
-        validarCantidadTipoHabitacion (habArreglo, tipoHabitacion, cantidad, i+1)
+
+
+getCurrResId reservaciones  =
+    if reservaciones == [] then "0"
+    else if largo(reservaciones)==1 then  
+        head (head reservaciones) 
+    else
+        getCurrResId (tail reservaciones)
+
+terminarHab tipoHabitaciones cantidadXtipo tarifas reservaciones facturas newRes i habitaciones cantNinos cantAdultos= do
+    putStr "Nombre de la persona que reserva: \n"
+    nombre <- getLine
+    putStr "Ingrese la fecha de entrada \n"
+    entrada <- getLine
+    let diaIn = read([head entrada] ++ [head (tail entrada)]) :: Int
+    let restante = tail(tail(tail(entrada)))
+    let mesIn = read([head restante] ++ [head (tail restante)]) :: Int
+    let restante2 = tail(tail(tail(restante)))
+    let year = read(restante2) :: Integer
+
+    putStr "Ingrese la fecha de salida \n"
+    salida <- getLine
+    let diaFin = read([head salida] ++ [head (tail salida)]) :: Int
+    let restante3 = tail(tail(tail(salida)))
+    let mesFin = read([head restante3] ++ [head (tail restante3)]) :: Int
+
+
+    let x = show i 
+    let id = read (getCurrResId reservaciones )::Int
+    let idInt = id+1
+    let idStr = show idInt
+    let montoAds = calcularTarifaDias (tarifas,0,"Adulto",year,cantAdultos,diaIn,diaFin,mesIn,mesFin)
+    let montoKids = calcularTarifaDias (tarifas,0,"Nino",year,cantNinos,diaIn,diaFin,mesIn,mesFin)
+    let montoTotal = montoAds+montoKids
+    let montoEnString = show montoTotal 
+
+ 
+    let c  = reservaciones++[[idStr]++[nombre]++[entrada]++[salida]++[x]++["activa"]++["noFacturada"]++[montoEnString ]++newRes]
+    let msg =  "Reserva realizadad con exito, id de la reserva:" ++ idStr ++ "\n"
+    putStr msg 
+    print c
+    generales(tipoHabitaciones, cantidadXtipo, tarifas, c, facturas,habitaciones)
+
+-- Formato de reserva: [[idRes,nombre, fechaEntrada,fechaSalida,cantidadHab,activa,noFacturada,montoEnString,idHabitacion,nombreTipoHab, cantNiños,cantAdultos],
+-- [idRes,nombre, fechaEntrada,fechaSalida,cantidadHab,activa,noFacturada,nombreTipoHa, cantNiños,cantAdultos, 
+-- nombreTipoHab,cantNiños,cantAdultos,nombreTipoHab,cantNiños,cantAdultos]]
+-- [["10","nombre","fechaEntrada","fechaSalida",,"cantidadHab","activa","noFacturada","montoEnString","idHab","nombreTipoHa","cantNi\241os","cantAdultos","idHab","nombreTipoHab","cantNi\241os","cantAdultos","idHab","nombreTipoHab","cantNi\241os","cantAdultos"]]
+cantidadResXTipo( reservaActual,  tipo, i, cantidadRes, cont )= 
+    if cont == cantidadRes then 0
+    else if enesimo(reservaActual,i)==tipo then 
+       1+ cantidadResXTipo (reservaActual  ,tipo ,i+4 ,cantidadRes ,cont+1)
+    else
+    cantidadResXTipo( reservaActual,  tipo, i+4, cantidadRes, cont+1)
+
+    
+
+totalResPorTipo (reserv,  tipo) =
+    if reserv==[] then 
+        0
+    else do
+        let c =  read(enesimo(head reserv, 4)) :: Int
+        (cantidadResXTipo (head reserv,  tipo, 9, c, 0)) + totalResPorTipo  (tail reserv, tipo)   -- se ubica en el indice 7 de cada subarreglo
+
+buscarCantTipo(cantXtipo,tipo)= 
+    if head(head cantXtipo) == tipo then head(tail(head(cantXtipo)))
+    else buscarCantTipo( tail cantXtipo,tipo)
+
+validarCantidadHabitacionXtipo(reser,cantXtipo,tipo)= do 
+    let cant = read(buscarCantTipo(cantXtipo,tipo)):: Int
+    (totalResPorTipo(reser, tipo)) +1 < cant
+    
+
+
+
+
+-- [["1","Rocardp\DEL Soto","10/10/2020/\DEL","10/10/2020","3","Estandar","3","2","Estandar","3","2","Suite","3","3"],["2","Rocardo Soto","10/20/1010","10/20/2020","1","Estandar","2","1"]]
+
+
+buscarId( habitaciones, tipo) = 
+    if habitaciones==[] then [] 
+    else if enesimo(head habitaciones, 2)=="noReservada" && tipo==enesimo(head habitaciones, 1) then enesimo(head habitaciones, 0) -- retorna el id 
+
+    else 
+        buscarId (tail habitaciones, tipo) 
+actualizarHabs(idHab, habitaciones) = 
+    if habitaciones==[] then [] 
+        else if idHab==enesimo(head habitaciones, 0) then 
+            [[idHab]++[enesimo(head habitaciones, 1)]++["reservada"]] ++actualizarHabs( idHab,tail habitaciones)
+    else 
+        [head habitaciones ]++actualizarHabs(idHab,tail habitaciones)
+-- reservar([["Estandar","des","30"],["Suite","des","40"]], [["Estandar","3"],["Suite","4"]],[["1","123"],["2","133"],["3","434"],["4","233"],["5","4343"],["6","4344"],["7","5345"],["8","6456"]],[],[],[["0","Estandar","noReservada"],["1","Estandar","noReservada"],["2","Estandar","noReservada"],["3","Suite","noReservada"],["4","Suite","noReservada"],["5","Suite","noReservada"],["6","Suite","noReservada"]],[],0,0,0)
+
+-- [["1","Ricardo","10/10/2020","10/20/1010","2","activa","noFacturada","montoEnString","0","Estandar","2","2","3","Suite","1","3"],["2","Brandon","10/11/2020","14/11/2020","2","activa","noFacturada","montoEnString","4","Suite","0","4","1","Estandar","2","1"]]
+
+reservar (tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones, newRes, i,cantNinos,cantAdultos ) = do 
+    putStr  "\n"    
+    putStr "Reservacion \n"    
+    putStr "Ingrese la cantidad de adultos \n"
+    putStr "Salir y terminar de reservar habitaciones(S)\n" 
+    adultos <- getLine 
+    if adultos == [head "S"] then 
+        terminarHab tipoHabitaciones cantidadXtipo tarifas reservaciones facturas newRes i habitaciones cantNinos cantAdultos
+    else do
+    putStr "Ingrese la cantidad de niños\n"
+    ninnos <- getLine  
+    putStr "Ingrese el tipo de habitacion\n"
+    tipo <- getLine         
+
+    if  validarHabitacionExiste(tipoHabitaciones,tipo,0) then  do 
+        if validarCantidadHabitacionXtipo(reservaciones,cantidadXtipo,tipo) then do 
+            let n = read ninnos:: Int
+            let m =  read adultos:: Int
+            let suma = m+n
+            let cantAdultos1 = cantAdultos+m 
+            let cantNinos1 = cantNinos+n 
+            let idHab = buscarId( habitaciones, tipo)
+            let nuevasHab = actualizarHabs(idHab, habitaciones)
+
+            reservar(tipoHabitaciones ,cantidadXtipo ,tarifas ,reservaciones ,facturas,nuevasHab, newRes++[idHab]++[tipo] ++ [ninnos] ++[adultos],i + 1 ,cantAdultos1,cantNinos1)  
+        else 
+            do  
+            print "Error: No hay más habitaciones de ese tipo disponible"
+            reservar (tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones, newRes, i,cantNinos,cantAdultos )        
+    else do     
+        
+        print "Error: Ese tipo de habitacion no existe"                
+        -- if  validarCantidadTipoHabitacion tipoHabitaciones suma i then 
+           --  reservar (tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas, newRes, i )        
+        --else
+          --  reservar(tipoHabitaciones ,cantidadXtipo ,tarifas ,reservaciones ,facturas, newRes++[tipo] ++ [ninnos] ++[adultos],i + 1 )  
+
+                 
 
 
 calcularMonto (tarifaArreglo, tipoPersona, anno, mes, dia, cantidadPersonas, monto) = do
@@ -200,61 +388,20 @@ calcularTarifaDias
 
 
 
-imprime l = do 
-        print ""
-        return l 
-
--- main        
-main = 
-    menu [] [] [] [] [] 
+--mnnn = do 
+    --let t = cargarTarifas [] [] [] []
+    --let cant = 5 
+    --let monto = calcularTarifaDias(t,28,31,10,10,0,"Adulto",2020,5)
+    --print monto
 
 
-menu tipoHabitaciones cantidadXtipo tarifas reservaciones facturas  = do 
-    putStr "Ingrese una opcion \n"
-    putStr "1.Opciones Administrativas \n"
-    putStr "2.Opciones generales \n"
-    putStr "3.Salir \n"
-    first <- getLine
-    if first== [head "1"] then                             
-        admin tipoHabitaciones cantidadXtipo tarifas reservaciones facturas
-    else if  first== [head "2"] then                             
-        generales tipoHabitaciones cantidadXtipo tarifas reservaciones facturas
-
-    else menu tipoHabitaciones cantidadXtipo tarifas reservaciones facturas
-generales tipoHabitaciones cantidadXtipo tarifas reservaciones facturas = do 
-    putStr "Ingrese una opcion \n"
-    putStr "1.Reservacion \n"
-    putStr "2.Factura \n"
-    first <- getLine
-    if first== [head "1"] then                             
-        reservar tipoHabitaciones cantidadXtipo tarifas reservaciones facturas
-    else 
-        generales tipoHabitaciones cantidadXtipo tarifas reservaciones facturas    
+    
+    
 
 
 
 
-
-
-reservar tipoHabitaciones cantidadXtipo tarifas reservaciones facturas = do 
-    putStr "Reservacion \n"
-    putStr "Ingrese la fecha de entrada \n"
-    entrada <- getLine
-    putStr "Ingrese la fecha de salida \n"
-    salida <- getLine
-    putStr "Ingrese la cantidad de adultos \n"
-    adultos <- getLine 
-    putStr "Ingrese la cantidad de niños\n"
-    ninnos <- getLine  
-    putStr "Nombre de la persona que reserva: \n"
-    nombre <- getLine
-    putStr nombre
-    -- let habitaciones = getHabitaciones cantidadXtipo
-
-
-
-
-admin hab cantxTipo tarifas reser fact   = do 
+admin hab cantxTipo tarifas reser fact habitaciones  = do 
                           putStr "Ingrese una opcion \n"
                           putStr "1.Información de hotel \n"
                           putStr "2.Cargar tipo de habitacion  \n" 
@@ -263,13 +410,15 @@ admin hab cantxTipo tarifas reser fact   = do
                           putStr "5.Consultar reservaciones \n"
                           putStr "6.Consulta de factura \n"
                           putStr "7.Estadísticas de ocupación \n"
-                          putStr "3.Salir \n"
+                          putStr "8.Salir \n"
                           first <- getLine
                           if first== [head "2"] then                             
-                            cargarTipoHabitaciones cantxTipo tarifas reser fact
+                            cargarTipoHabitaciones cantxTipo tarifas reser fact habitaciones
                           else if first== [head "3"] then                             
-                            asignarHabitacionexTipo(hab,cantxTipo,tarifas,reser,fact,0,[])
+                            asignarHabitacionexTipo(hab,cantxTipo,tarifas,reser,fact,0,[],habitaciones)
                           else if first== [head "4"] then                             
-                            cargaTarifas hab cantxTipo reser fact
+                            cargaTarifas hab cantxTipo reser fact habitaciones
+                          else if first== [head "8"] then                             
+                            menu hab cantxTipo tarifas reser fact habitaciones
                           else 
-                            admin hab cantxTipo tarifas  reser fact
+                            admin hab cantxTipo tarifas  reser fact habitaciones
