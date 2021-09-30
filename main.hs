@@ -395,7 +395,51 @@ calcularTarifaDias
     --print monto
 
 
-    
+
+getCurrFactId facturas  =
+    if facturas == [] then "0"
+    else if largo(facturas)==1 then  
+        head (head facturas) 
+    else
+        getCurrFactId (tail facturas)
+
+
+noExisteReserva (tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones)= do
+  print "Error: No se encontro ninguna reserva con ese ID"
+  generales (tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones)
+
+validarReservaExiste (reser, numReservacion, i, tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones) = do
+    if i == largo(reser) then noExisteReserva(tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones)
+    else if enesimo(enesimo(reser,i),0)== numReservacion then facturacion(reser, numReservacion, i, tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones)
+    else
+      validarReservaExiste (reser, numReservacion, i+1, tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones)
+
+
+facturacion (reser, numReservacion, i, tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones) = do
+  print "---------------------"
+  print "----- Factura -------"
+  print "---------------------"
+  let idenFact = read (getCurrFactId facturas) :: Int
+  let cadenaIden = "Identificador factura: " ++ show idenFact
+  print cadenaIden
+  let idenReser = "Identificador reserva: " ++ enesimo(enesimo(reser,i),0)
+  print idenReser
+  let subTotal = read (enesimo(enesimo(reser,i),7)) :: Int
+  let impuesto = 0.13
+  let montoImpuesto = impuesto * fromIntegral subTotal
+  let cadenaImpuesto = "El impuesto de venta es de: " ++ show impuesto
+  print cadenaImpuesto
+  let total = impuesto + fromIntegral subTotal
+  let cadenaTotal = "El monto total es de: " ++ show total
+  print "---------------------"
+
+  -- 
+  -- Guardar factura en arreglo
+  let c = facturas ++ [ [show idenFact]++[show total]++[show idenReser] ]
+  generales (tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, c, habitaciones)
+
+
+
     
 
 
