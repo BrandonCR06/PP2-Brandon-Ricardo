@@ -132,8 +132,9 @@ asignarHabitacionexTipo (hab,cantxTipo,tarifas ,reser, fact, i, respuesta, habit
     let habi = generarNHabitaciones (cant1, olId, [], tipo,0)    
     if i == largo (hab) -1 then do         
         let c = habitaciones++habi
+        let h = respuesta++[[tipo]++[cant]]
         print c
-        admin hab respuesta tarifas reser fact c
+        admin hab h tarifas reser fact c
     else asignarHabitacionexTipo (hab,cantxTipo,tarifas,reser ,fact ,i+1, respuesta ++ [[tipo]++ [cant]],habitaciones++habi)
 
 cargaTarifas hab cantxTipo  reser fact habitaciones = do 
@@ -181,7 +182,7 @@ generales (tipoHabitaciones ,cantidadXtipo ,tarifas ,reservaciones ,facturas,hab
     putStr "1.Reservacion \n"
     putStr "2.CancelarReservacion \n"
     putStr "3.Factura \n"
-    putStr "3.Volver \n"
+    putStr "4.Volver \n"
     first <- getLine
     print reservaciones
     if first== [head "1"] then                             
@@ -201,7 +202,8 @@ generales (tipoHabitaciones ,cantidadXtipo ,tarifas ,reservaciones ,facturas,hab
         putStr "Ingrese el numero de identificador de la reserva:\n"        
         resId <- getLine
         facturacion (resId, 0, tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones)                    
-        
+    else if first== [head "4"] then 
+        menu tipoHabitaciones cantidadXtipo tarifas reservaciones facturas habitaciones         
 
     else
         generales (tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones)    
@@ -400,15 +402,14 @@ reservar (tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habi
     tipo <- getLine         
 
     if  validarHabitacionExiste(tipoHabitaciones,tipo,0) then  do 
-        if validarCantidadHabitacionXtipo(reservaciones,cantidadXtipo,tipo) then do 
+        if validarCantidadHabitacionXtipo(reservaciones,cantidadXtipo,tipo) then do             
             let n = read ninnos:: Int
             let m =  read adultos:: Int
             let suma = m+n
             let cantAdultos1 = cantAdultos+m 
             let cantNinos1 = cantNinos+n 
             let idHab = buscarId( habitaciones, tipo)
-            let nuevasHab = actualizarHabs(idHab, habitaciones)
-
+            let nuevasHab = actualizarHabs(idHab, habitaciones)            
             reservar(tipoHabitaciones ,cantidadXtipo ,tarifas ,reservaciones ,facturas,nuevasHab, newRes++[idHab]++[tipo] ++ [ninnos] ++[adultos],i + 1 ,cantAdultos1,cantNinos1)  
         else 
             do  
