@@ -408,23 +408,23 @@ noExisteReserva (tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, factur
   print "Error: No se encontro ninguna reserva con ese ID"
   generales (tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones)
 
-validarReservaExiste (reser, numReservacion, i, tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones) = do
-    if i == largo(reser) then noExisteReserva(tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones)
-    else if enesimo(enesimo(reser,i),0)== numReservacion then facturacion(reser, numReservacion, i, tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones)
+validarReservaExiste (numReservacion, i, tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones) = do
+    if i == largo(reservaciones) then noExisteReserva(tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones)
+    else if enesimo(enesimo(reservaciones,i),0)== numReservacion then facturacion(numReservacion, i, tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones)
     else
-      validarReservaExiste (reser, numReservacion, i+1, tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones)
+      validarReservaExiste (numReservacion, i+1, tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones)
 
 
-facturacion (reser, numReservacion, i, tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones) = do
+facturacion (numReservacion, i, tipoHabitaciones, cantidadXtipo, tarifas, reservaciones, facturas,habitaciones) = do
   print "---------------------"
   print "----- Factura -------"
   print "---------------------"
   let idenFact = read (getCurrFactId facturas) :: Int
   let cadenaIden = "Identificador factura: " ++ show idenFact
   print cadenaIden
-  let idenReser = "Identificador reserva: " ++ enesimo(enesimo(reser,i),0)
+  let idenReser = "Identificador reserva: " ++ enesimo(enesimo(reservaciones,i),0)
   print idenReser
-  let subTotal = read (enesimo(enesimo(reser,i),7)) :: Int
+  let subTotal = read (enesimo(enesimo(reservaciones,i),7)) :: Int
   let impuesto = 0.13
   let montoImpuesto = impuesto * fromIntegral subTotal
   let cadenaImpuesto = "El impuesto de venta es de: " ++ show impuesto
